@@ -9,6 +9,7 @@ import javax.microedition.midlet.*;
 import com.sun.lwuit.*;
 import com.sun.lwuit.events.*;
 import com.sun.lwuit.layouts.GridLayout;
+import com.sun.lwuit.plaf.Style;
 
 /**
  * @author Erik Wegner
@@ -23,6 +24,31 @@ public class Midlet extends MIDlet implements ActionListener {
     
     Control controller;
     
+    private void setStartStopButtonStyle() {
+        Style s = main_startstop.getUnselectedStyle();
+        s.setBackgroundType(Style.BACKGROUND_GRADIENT_LINEAR_VERTICAL);
+        s.setBackgroundGradientStartColor(0xcccccc);
+        s.setBackgroundGradientEndColor(0x000000);
+        s.setFont(Font.createSystemFont(Font.FACE_PROPORTIONAL, Font.STYLE_BOLD, Font.SIZE_LARGE));
+        s.setFgColor(0xffffff);
+        
+        s = main_startstop.getSelectedStyle();
+        s.setBackgroundType(Style.BACKGROUND_GRADIENT_LINEAR_VERTICAL);
+        s.setBackgroundGradientStartColor(0xcccccc);
+        s.setBackgroundGradientEndColor(0x000000);
+        s.setFont(Font.createSystemFont(Font.FACE_PROPORTIONAL, Font.STYLE_BOLD, Font.SIZE_LARGE));
+        s.setFgColor(0xffffff);
+        
+        s = main_startstop.getPressedStyle();
+        s.setBackgroundType(Style.BACKGROUND_GRADIENT_LINEAR_VERTICAL);
+        s.setBackgroundGradientStartColor(0xdddddd);
+        s.setBackgroundGradientEndColor(0xaaaaaa);
+        s.setFont(Font.createSystemFont(Font.FACE_PROPORTIONAL, Font.STYLE_BOLD, Font.SIZE_LARGE));
+        s.setFgColor(0xffffff);
+        
+        main_startstop.setAlignment(Button.CENTER);
+    }
+    
     private void createFormMain() {
         main_customer = new Label("Customer");
         main_project = new Label("Project");
@@ -30,6 +56,7 @@ public class Midlet extends MIDlet implements ActionListener {
         main_status = new Label("Status");
         
         main_startstop = new Button(new Command("Start/Stop"));
+        setStartStopButtonStyle();      
         
         mainform = new Form("EWUS TimeTracker");
         
