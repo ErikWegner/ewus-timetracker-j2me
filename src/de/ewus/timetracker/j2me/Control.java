@@ -74,14 +74,25 @@ public class Control implements Runnable {
         this.task = task;
     }
 
+    private String format(long l) {
+        String s = String.valueOf(l);
+        if (l<10)s="0"+s;
+        return s;
+    }
+    
     public void run() {
         this.startTime = System.currentTimeMillis();
-        long now = 0;
+        long now = 0, diff, p1, p2, p3;
+        String s;
         while (running) {
             try {
                 Thread.sleep(100);
                 now = System.currentTimeMillis();
-                midlet.main_status.setText(String.valueOf(now - startTime));
+                diff = (now - startTime) / 1000;
+                p3 = diff % 60; diff = diff / 60; // seconds
+                p2 = diff % 60; diff = diff / 60; // minutes
+                p1 = diff; // hours
+                midlet.main_status.setText(String.valueOf(p1) + ":" + format(p2) + ":" + format(p3));
             } catch (InterruptedException e) {}
         }
     }
