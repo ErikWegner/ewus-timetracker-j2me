@@ -11,20 +11,23 @@ import com.sun.lwuit.events.*;
 import com.sun.lwuit.layouts.GridLayout;
 
 /**
- * @author Erik.Wegner
+ * @author Erik Wegner
  */
 public class Midlet extends MIDlet implements ActionListener {
 
     Form mainform;
     
     Command exitCommand;
-    Label main_customer, main_project, main_task;
+    Label main_customer, main_project, main_task, main_status;
     Button main_startstop;
+    
+    Control controller;
     
     private void createFormMain() {
         main_customer = new Label("Customer");
         main_project = new Label("Project");
         main_task = new Label("Task");
+        main_status = new Label("Status");
         
         main_startstop = new Button(new Command("Start/Stop"));
         
@@ -35,6 +38,7 @@ public class Midlet extends MIDlet implements ActionListener {
         mainform.addComponent(main_project);
         mainform.addComponent(main_task);
         mainform.addComponent(main_startstop);
+        mainform.addComponent(main_status);
         
         exitCommand = new Command("Exit");
         mainform.addCommand(exitCommand);
@@ -45,6 +49,7 @@ public class Midlet extends MIDlet implements ActionListener {
     
     public void startApp() {
         Display.init(this);
+        controller = new Control(this);
         
         createFormMain();
     }
@@ -59,6 +64,9 @@ public class Midlet extends MIDlet implements ActionListener {
         Command c = ae.getCommand();
         if (c.getCommandName().equals("Exit")) {
             notifyDestroyed();
+        }
+        if (c.getCommandName().equals("Start/Stop")) {
+            controller.startstop();
         }
     }
 }
