@@ -1,12 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package de.ewus.timetracker.j2me;
 
 import javax.microedition.midlet.*;
 
 import com.sun.lwuit.*;
+import com.sun.lwuit.animations.CommonTransitions;
 import com.sun.lwuit.events.*;
 import com.sun.lwuit.layouts.GridLayout;
 import com.sun.lwuit.plaf.Style;
@@ -16,11 +13,25 @@ import com.sun.lwuit.plaf.Style;
  */
 public class Midlet extends MIDlet implements ActionListener {
 
+    /** Command exit application */
+    private static final int CMD_EXIT = 1;
+    
+    /** Command go back */
+    private static final int CMD_BACK = 2;
+    
+    /** Command start/stop */
+    private static final int CMD_STARTSTOP = 3;
+    
+    /** Command go to settings */
+    private static final int CMD_SETTINGS = 4;
+    
     Form mainform;
     
     Command exitCommand;
     Label main_customer, main_project, main_task, main_status;
     Button main_startstop;
+    
+    Form settingsform;
     
     Control controller;
     
@@ -55,7 +66,7 @@ public class Midlet extends MIDlet implements ActionListener {
         main_task = new Label("Task");
         main_status = new Label("Status");
         
-        main_startstop = new Button(new Command("Start/Stop"));
+        main_startstop = new Button(new Command("Start/Stop", CMD_STARTSTOP));
         setStartStopButtonStyle();      
         
         mainform = new Form("EWUS TimeTracker");
@@ -67,11 +78,24 @@ public class Midlet extends MIDlet implements ActionListener {
         mainform.addComponent(main_startstop);
         mainform.addComponent(main_status);
         
-        exitCommand = new Command("Exit");
+        exitCommand = new Command("Exit", CMD_EXIT);
         mainform.addCommand(exitCommand);
 
+        mainform.addCommand(new Command("Settings", CMD_SETTINGS));
+        
+        mainform.setTransitionOutAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
+        mainform.setTransitionInAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
         mainform.addCommandListener(this);
         mainform.show();
+    }
+    
+    private void createFormSettings() {
+        settingsform = new Form("Settings");
+        
+        settingsform.addCommand(new Command("Back", CMD_BACK));
+        settingsform.addCommand(exitCommand);
+        
+        settingsform.addCommandListener(this);
     }
     
     public void startApp() {
@@ -89,11 +113,20 @@ public class Midlet extends MIDlet implements ActionListener {
     
     public void actionPerformed(ActionEvent ae) {
         Command c = ae.getCommand();
-        if (c.getCommandName().equals("Exit")) {
+        if (c.getId() == CMD_EXIT) {
             notifyDestroyed();
         }
-        if (c.getCommandName().equals("Start/Stop")) {
+        if (c.getId() == CMD_STARTSTOP) {
             controller.startstop();
+        }
+        if (c.getId() == CMD_BACK) {
+            mainform.showBack();
+        }
+        if (c.getId() == CMD_SETTINGS) {
+            if (settingsform == null) {
+                createFormSettings();
+            }
+            settingsform.show();
         }
     }
 }
