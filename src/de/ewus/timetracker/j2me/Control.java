@@ -27,6 +27,9 @@ public class Control implements Runnable {
             this.project = "New time tracking software";
             this.task = "Mobile app";
             this.running = storage.getRunning();
+            if (this.running) {
+                startstop();
+            }
         }
     }
     

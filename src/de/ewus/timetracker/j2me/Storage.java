@@ -12,6 +12,7 @@ public class Storage {
     private final String DATASTORENAME = "EWUSTimeTracker";
     private final String SETTINGSSTORENAME = "EWUSTimeTrackerSettings";
     private RecordStore datastore, settingsstore;
+    private final String SETTING_RUNNING = "Running";
 
     /**
      * Returns the id of a record or -1
@@ -19,12 +20,15 @@ public class Storage {
      * @return ID of the record or -1 if none is found
      */
     private int settingExists(String settingname) {
+        int r = -1;
         try {
             RecordEnumeration e = settingsstore.enumerateRecords(null, null, true);
+            int r_temp = -1;
             while (e.hasNextElement()) {
-                String s = new String(e.nextRecord());
+                r_temp = e.nextRecordId();
+                String s = new String(settingsstore.getRecord(r_temp));
                 if (s.startsWith(settingname + "="))
-                    return e.
+                    r = r_temp;
             }
             e.destroy();
         } catch (RecordStoreNotOpenException ex) {
@@ -32,6 +36,7 @@ public class Storage {
         } catch (RecordStoreException ex) {
             ex.printStackTrace();
         }
+        return r;
     }
 
     /**
@@ -41,13 +46,37 @@ public class Storage {
      */
     public void set(String setting, String value) {
         int id = settingExists(setting);
-        if (id > -1) {
-            settingsstore.setRecord(id, setting.getBytes(), 0, setting.length());
-        } else {
-            settingsstore.addRecord(setting.getBytes(), 0, settings.length());
+        try {
+            if (id > -1) {
+                settingsstore.setRecord(id, setting.getBytes(), 0, setting.length());
+            } else {
+                settingsstore.addRecord(setting.getBytes(), 0, setting.length());
+            }
+        } catch (RecordStoreException e) {
+            e.printStackTrace();
+            //TODO: show user notice
         }
     }
 
+    /**
+     * Get a setting
+     * @param setting Name of the setting
+     * @param defaultvalue Default value to return
+     * @return The value
+     */
+    public String get(String setting, String defaultvalue) {
+        String r = defaultvalue;
+        int record_id = this.settingExists(setting);
+        if (record_id > -1) {
+            try {
+                r = new String(this.datastore.getRecord(record_id));
+            } catch (RecordStoreException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return r;
+    }
+    
     private void readSettings() throws RecordStoreException {
         if (settingsstore == null) {
             try {
@@ -56,7 +85,7 @@ public class Storage {
             }
             if (settingsstore == null) {
                 settingsstore = RecordStore.openRecordStore(SETTINGSSTORENAME, true);
-                set("Running", "0");
+                setRunning(false);
             }
         }
     }
@@ -65,35 +94,17 @@ public class Storage {
         readSettings();
     }
 
-    private void setRecord(int id, String data) {
-        byte[] record = data.getBytes();
-        boolean recordExists = false;
-        try {
-            rs.getRecord(id);
-            recordExists = true;
-        } catch (InvalidRecordIDException) {
-        }
-        if (recordExists) {
-            rs.setRecord(id, record, 0, data.length());
-        } else {
-            rs.ad
-        }
-    }
 
     /**
      * Stores the state of the timer.
      * @param isRunning True, if the timmer is running
      */
     public void setRunning(boolean isRunning) throws RecordStoreException {
-        byte[] record = new byte[1];
+        String value = "0";
         if (isRunning) {
-            record[0] = 1;
-        } else {
-            record[0] = 0;
+            value = "1";
         }
-        if (rs.) {
-            rs.setRecord(RECORD_RUNNING, record, 0, 1);
-        }
+        this.set(SETTING_RUNNING, value);
     }
 
     /**
@@ -101,16 +112,8 @@ public class Storage {
      * @return True, if timer is running.
      */
     public boolean getRunning() {
-        try {
-            byte[] record = rs.getRecord(RECORD_RUNNING);
-            if (record != null) {
-                String s = new String(record);
-                return s.equals("1");
-            }
-            return false;
-        } catch (RecordStoreException ex) {
-            ex.printStackTrace();
-        }
+        String v = get(SETTING_RUNNING, "0");
+        if (v.equals("1")) return true;
         return false;
     }
 
