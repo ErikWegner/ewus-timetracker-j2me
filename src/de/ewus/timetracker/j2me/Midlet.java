@@ -108,6 +108,15 @@ public class Midlet extends MIDlet implements ActionListener {
     public void pauseApp() {
     }
     
+    /**
+     * Shows an error dialog.
+     * @param title Title
+     * @param message The message
+     */
+    public void errorDialog(String title, String message) {
+        Dialog.show(title, new TextArea(message), new Command[] {new Command("Dismiss")} );
+    }
+    
     public void destroyApp(boolean unconditional) {
     }
     

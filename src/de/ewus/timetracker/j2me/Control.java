@@ -33,9 +33,18 @@ public class Control implements Runnable {
         }
     }
     
+    private void errorDialog(String title, String message) {
+        midlet.errorDialog(title, message);
+    }
+    
     public void startstop() {
         running = !running;
         midlet.main_status.setText(String.valueOf(running));
+        try {
+            storage.setRunning(running);
+        } catch (RecordStoreException ex) {
+            errorDialog("Memory error", ex.getMessage());
+        }
         if (running) {
             Thread t = new Thread(this);
             t.start();
