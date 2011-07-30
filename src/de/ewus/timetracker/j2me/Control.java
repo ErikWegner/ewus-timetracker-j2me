@@ -1,5 +1,7 @@
 package de.ewus.timetracker.j2me;
 
+import javax.microedition.rms.RecordStoreException;
+
 /**
  *
  * @author Erik Wegner
@@ -14,12 +16,18 @@ public class Control implements Runnable {
     
     public Control(Midlet midlet) {
         this.midlet = midlet;
-        this.storage = new Storage();
-        //TODO: read last settings from storage
-        this.customer = "Big Company";
-        this.project = "New time tracking software";
-        this.task = "Mobile app";
-        this.running = storage.getRunning();
+        try {
+            this.storage = new Storage();
+        } catch (RecordStoreException ex) {
+            midlet.main_status.setText(ex.getMessage());
+        }
+        if (this.storage != null) {
+            //TODO: read last settings from storage
+            this.customer = "Big Company";
+            this.project = "New time tracking software";
+            this.task = "Mobile app";
+            this.running = storage.getRunning();
+        }
     }
     
     public void startstop() {
