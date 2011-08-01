@@ -182,4 +182,63 @@ public class Storage {
             }
         }
     }
+
+    /**
+     * Add a time slot to the database
+     * @param begin Starting time
+     * @param end End time
+     * @param task time for this task
+     */
+    public boolean adddTimeSlot(long begin, long end, int task) {
+        boolean r = false;
+        error = "";
+        try {
+            datastore = RecordStore.openRecordStore(DATASTORENAME, true);
+            byte[] data = (String.valueOf(begin) + "#" + String.valueOf(end) + "#" + String.valueOf(task)).getBytes();
+            datastore.addRecord(data, 0, data.length);
+            datastore.closeRecordStore();
+            r = true;
+        } catch (RecordStoreException ex) {
+            ex.printStackTrace();
+            error = ex.getMessage();
+        }
+        return r;
+    }
+    
+    
+    /**
+     * Contains the latest error message
+     */
+    public String error = "";
+
+    /**
+     * Reads the number of records
+     * @return number of records or -1 if an error occurs
+     */
+    public int countTimeSlots() {
+        int r = -1;
+        error = "";
+        try {
+            datastore = RecordStore.openRecordStore(DATASTORENAME, true);
+            r = datastore.getNumRecords();
+            datastore.closeRecordStore();
+        } catch (RecordStoreException ex) {
+            ex.printStackTrace();
+            error = ex.getMessage();
+        }
+        return r;
+    }
+
+    /**
+     * Removes all time slots from the database by erasing the database.
+     */
+    public void clearTimeSlots() {
+        error = "";
+        try {
+            RecordStore.deleteRecordStore(DATASTORENAME);
+        } catch (RecordStoreException ex) {
+            ex.printStackTrace();
+            error = ex.getMessage();
+        }
+    }
 }

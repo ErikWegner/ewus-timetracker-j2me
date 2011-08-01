@@ -37,9 +37,14 @@ public class Control implements Runnable {
         midlet.errorDialog(title, message);
     }
     
+    private void setStatus(String text) {
+        if (midlet != null && midlet.main_status != null) 
+            midlet.main_status.setText(text);
+    }
+    
     public void startstop() {
         running = !running;
-        midlet.main_status.setText(String.valueOf(running));
+        setStatus(String.valueOf(running));
         try {
             storage.setRunning(running);
         } catch (RecordStoreException ex) {
@@ -112,8 +117,20 @@ public class Control implements Runnable {
                 p3 = diff % 60; diff = diff / 60; // seconds
                 p2 = diff % 60; diff = diff / 60; // minutes
                 p1 = diff; // hours
-                midlet.main_status.setText(String.valueOf(p1) + ":" + format(p2) + ":" + format(p3));
+                setStatus(String.valueOf(p1) + ":" + format(p2) + ":" + format(p3));
             } catch (InterruptedException e) {}
         }
+    }
+
+    public boolean addTimeSlot(long begin, long end, int task) {
+        return storage.adddTimeSlot(begin, end, task);
+    }
+
+    public int countTimeSlots() {
+        return storage.countTimeSlots();
+    }
+
+    public void clearTimeSlots() {
+        storage.clearTimeSlots();
     }
 }

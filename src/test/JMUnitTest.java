@@ -6,7 +6,7 @@
  */
 package test;
 
-import de.ewus.timetracker.j2me.Storage;
+import de.ewus.timetracker.j2me.*;
 import jmunit.framework.cldc11.*;
 
 /**
@@ -16,7 +16,7 @@ public class JMUnitTest extends TestCase {
     
     public JMUnitTest() {
         //The first parameter of inherited constructor is the number of test cases
-        super(5, "JMUnitTest EWUSTT");
+        super(6, "JMUnitTest EWUSTT");
     }    
     
     public void test(int testNumber) throws Throwable {
@@ -26,6 +26,7 @@ public class JMUnitTest extends TestCase {
             case 2 : test_storage_persistent_running(0); break;
             case 3 : test_storage_persistent_running(1); break;
             case 4 : test_storage_nosetting(); break;
+            case 5 : test_clear_timeslots(); break;
         }
     }    
     
@@ -63,6 +64,14 @@ public class JMUnitTest extends TestCase {
         Storage s = new Storage();
         assertEquals("No value stored.", s.get("XXGJKL", "No value stored."));
         s.shutdown();
+    }
+    
+    private void test_clear_timeslots() throws Exception {
+        Control c = new Control(null);
+        assertTrue("Adding time slot", c.addTimeSlot(0, 10, 0));
+        assertTrue("Has time slots", c.countTimeSlots() > 0);
+        c.clearTimeSlots();
+        assertTrue("No time slots", c.countTimeSlots() == 0);
     }
     
 }
