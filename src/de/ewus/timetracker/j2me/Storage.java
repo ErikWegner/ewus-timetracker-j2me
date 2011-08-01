@@ -170,4 +170,14 @@ public class Storage {
     public void setTaskid(int taskid) {
         this.taskid = taskid;
     }
+
+    public void shutdown() {
+        if (this.settingsstore != null) {
+            try {
+                settingsstore.closeRecordStore();
+            } catch (RecordStoreException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
 }
