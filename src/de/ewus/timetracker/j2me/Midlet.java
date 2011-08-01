@@ -100,9 +100,8 @@ public class Midlet extends MIDlet implements ActionListener {
     
     public void startApp() {
         Display.init(this);
-        controller = new Control(this);
-        
         createFormMain();
+        controller = new Control(this);
     }
     
     public void pauseApp() {
@@ -118,6 +117,7 @@ public class Midlet extends MIDlet implements ActionListener {
     }
     
     public void destroyApp(boolean unconditional) {
+        controller.end();
     }
     
     public void actionPerformed(ActionEvent ae) {

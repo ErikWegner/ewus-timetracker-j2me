@@ -13,7 +13,8 @@ public class Storage {
     private final String SETTINGSSTORENAME = "EWUSTimeTrackerSettings";
     private RecordStore datastore, settingsstore;
     private final String SETTING_RUNNING = "Running";
-
+    public final static String STARTTIME = "Starttime";
+    
     /**
      * Returns the id of a record or -1
      * @param settingname The setting's name

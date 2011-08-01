@@ -19,7 +19,7 @@ public class Control implements Runnable {
         try {
             this.storage = new Storage();
         } catch (RecordStoreException ex) {
-            midlet.main_status.setText(ex.getMessage());
+            setStatus(ex.getMessage());
         }
         if (this.storage != null) {
             //TODO: read last settings from storage
@@ -28,13 +28,18 @@ public class Control implements Runnable {
             this.task = "Mobile app";
             this.running = storage.getRunning();
             if (this.running) {
-                startstop();
+                this.startTime = Long.parseLong(storage.get(Storage.STARTTIME, "0"));
+                startstop2();
             }
+        } else {
+            errorDialog("Settings unavailable", "No database opened.");
         }
     }
     
     private void errorDialog(String title, String message) {
-        midlet.errorDialog(title, message);
+        if (midlet != null) {
+            midlet.errorDialog(title, message);
+        }
     }
     
     private void setStatus(String text) {
@@ -44,6 +49,11 @@ public class Control implements Runnable {
     
     public void startstop() {
         running = !running;
+        startstop2();
+    }
+    
+    private void startstop2() {
+        
         setStatus(String.valueOf(running));
         try {
             storage.setRunning(running);
@@ -106,7 +116,10 @@ public class Control implements Runnable {
     }
     
     public void run() {
-        this.startTime = System.currentTimeMillis();
+        if (this.startTime == 0) {
+            this.startTime = System.currentTimeMillis();
+            storage.set(Storage.STARTTIME, String.valueOf(startTime));
+        }
         long now = 0, diff, p1, p2, p3;
         String s;
         while (running) {
@@ -120,8 +133,16 @@ public class Control implements Runnable {
                 setStatus(String.valueOf(p1) + ":" + format(p2) + ":" + format(p3));
             } catch (InterruptedException e) {}
         }
-    }
+        setStatus("Adding to database…");
+        storage.adddTimeSlot(startTime, System.currentTimeMillis(), 0);
+        setStatus("Done.");
 
+    }
+    
+    public void end() {
+        storage.shutdown();
+    }
+    
     public boolean addTimeSlot(long begin, long end, int task) {
         return storage.adddTimeSlot(begin, end, task);
     }
