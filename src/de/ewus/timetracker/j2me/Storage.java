@@ -46,11 +46,12 @@ public class Storage {
      */
     public void set(String setting, String value) {
         int id = settingExists(setting);
+        byte[] recordvalue = (setting + "=" + value).getBytes();
         try {
             if (id > -1) {
-                settingsstore.setRecord(id, setting.getBytes(), 0, setting.length());
+                settingsstore.setRecord(id, recordvalue, 0, recordvalue.length);
             } else {
-                settingsstore.addRecord(setting.getBytes(), 0, setting.length());
+                settingsstore.addRecord(recordvalue, 0, recordvalue.length);
             }
         } catch (RecordStoreException e) {
             e.printStackTrace();
@@ -69,7 +70,8 @@ public class Storage {
         int record_id = this.settingExists(setting);
         if (record_id > -1) {
             try {
-                r = new String(this.datastore.getRecord(record_id));
+                r = new String(this.settingsstore.getRecord(record_id));
+                r = r.substring(r.indexOf("=")+1);
             } catch (RecordStoreException ex) {
                 ex.printStackTrace();
             }
