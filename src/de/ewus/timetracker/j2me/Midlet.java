@@ -64,15 +64,15 @@ public class Midlet extends MIDlet implements ActionListener {
     }
     
     private void createFormMain() {
-        main_customer = new Label("Customer");
-        main_project = new Label("Project");
-        main_task = new Label("Task");
-        main_status = new Label("Status");
+        main_customer = new Label(LocalizationSupport.getMessage("Customer"));
+        main_project = new Label(LocalizationSupport.getMessage("Project"));
+        main_task = new Label(LocalizationSupport.getMessage("Task"));
+        main_status = new Label(LocalizationSupport.getMessage("Status"));
         
-        main_startstop = new Button(new Command("Start/Stop", CMD_STARTSTOP));
+        main_startstop = new Button(new Command(LocalizationSupport.getMessage("StartStop"), CMD_STARTSTOP));
         setStartStopButtonStyle();      
         
-        mainform = new Form("EWUS TimeTracker");
+        mainform = new Form(LocalizationSupport.getMessage("EWUSTimeTracker"));
         
         mainform.setLayout(new GridLayout(5, 1));
         mainform.addComponent(main_customer);
@@ -81,12 +81,12 @@ public class Midlet extends MIDlet implements ActionListener {
         mainform.addComponent(main_startstop);
         mainform.addComponent(main_status);
         
-        exitCommand = new Command("Exit", CMD_EXIT);
+        exitCommand = new Command(LocalizationSupport.getMessage("Exit"), CMD_EXIT);
         mainform.addCommand(exitCommand);
 
-        mainform.addCommand(new Command("Settings", CMD_SETTINGS));
+        mainform.addCommand(new Command(LocalizationSupport.getMessage("Settings"), CMD_SETTINGS));
         
-        mainform.addCommand(new Command("Data view", CMD_DATA));
+        mainform.addCommand(new Command(LocalizationSupport.getMessage("Dataview"), CMD_DATA));
         
         mainform.setTransitionOutAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
         mainform.setTransitionInAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
@@ -95,16 +95,16 @@ public class Midlet extends MIDlet implements ActionListener {
     }
     
     private void createFormDataview() {
-        dataform = new Form("Data view");
+        dataform = new Form(LocalizationSupport.getMessage("Dataview"));
         
-        dataform.addCommand(new Command("Back", CMD_BACK));
+        dataform.addCommand(new Command(LocalizationSupport.getMessage("Back"), CMD_BACK));
         dataform.addCommandListener(this);
     }
     
     private void createFormSettings() {
-        settingsform = new Form("Settings");
+        settingsform = new Form(LocalizationSupport.getMessage("Settings"));
         
-        settingsform.addCommand(new Command("Back", CMD_BACK));
+        settingsform.addCommand(new Command(LocalizationSupport.getMessage("Back"), CMD_BACK));
         settingsform.addCommand(exitCommand);
         
         settingsform.addCommandListener(this);
@@ -112,6 +112,9 @@ public class Midlet extends MIDlet implements ActionListener {
     
     public void startApp() {
         Display.init(this);
+        if (!LocalizationSupport.initLocalizationSupport()) {
+            errorDialog("Error loading translations", LocalizationSupport.getErrorMessage());
+        }
         createFormMain();
         controller = new Control(this);
     }
@@ -125,7 +128,7 @@ public class Midlet extends MIDlet implements ActionListener {
      * @param message The message
      */
     public void errorDialog(String title, String message) {
-        Dialog.show(title, new TextArea(message), new Command[] {new Command("Dismiss")} );
+        Dialog.show(title, new TextArea(message), new Command[] {new Command(LocalizationSupport.getMessage("Dismiss"))} );
     }
     
     public void destroyApp(boolean unconditional) {
