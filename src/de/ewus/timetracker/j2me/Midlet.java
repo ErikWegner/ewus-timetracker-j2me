@@ -24,6 +24,9 @@ public class Midlet extends MIDlet implements ActionListener {
     
     /** Command go to settings */
     private static final int CMD_SETTINGS = 4;
+
+    /** Command to open data screen */
+    private static final int CMD_DATA = 5;
     
     Form mainform;
     
@@ -31,7 +34,7 @@ public class Midlet extends MIDlet implements ActionListener {
     Label main_customer, main_project, main_task, main_status;
     Button main_startstop;
     
-    Form settingsform;
+    Form settingsform, dataform;
     
     Control controller;
     
@@ -83,10 +86,19 @@ public class Midlet extends MIDlet implements ActionListener {
 
         mainform.addCommand(new Command("Settings", CMD_SETTINGS));
         
+        mainform.addCommand(new Command("Data view", CMD_DATA));
+        
         mainform.setTransitionOutAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
         mainform.setTransitionInAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
         mainform.addCommandListener(this);
         mainform.show();
+    }
+    
+    private void createFormDataview() {
+        dataform = new Form("Data view");
+        
+        dataform.addCommand(new Command("Back", CMD_BACK));
+        dataform.addCommandListener(this);
     }
     
     private void createFormSettings() {
@@ -136,6 +148,12 @@ public class Midlet extends MIDlet implements ActionListener {
                 createFormSettings();
             }
             settingsform.show();
+        }
+        if (c.getId() == CMD_DATA) {
+            if (dataform == null) {
+                createFormDataview();
+            }
+            dataform.show();
         }
     }
 }
