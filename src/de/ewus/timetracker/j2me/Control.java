@@ -1,5 +1,6 @@
 package de.ewus.timetracker.j2me;
 
+import com.sun.lwuit.table.TableModel;
 import javax.microedition.rms.RecordStoreException;
 
 /**
@@ -153,5 +154,9 @@ public class Control implements Runnable {
 
     public void clearTimeSlots() {
         storage.clearTimeSlots();
+    }
+
+    public TableModel getTableModel() {
+        return this.storage;
     }
 }

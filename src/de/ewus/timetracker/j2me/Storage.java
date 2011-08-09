@@ -1,12 +1,14 @@
 package de.ewus.timetracker.j2me;
 
+import com.sun.lwuit.events.DataChangedListener;
+import com.sun.lwuit.table.TableModel;
 import javax.microedition.rms.*;
 
 /**
  *
  * @author Erik Wegner
  */
-public class Storage {
+public class Storage implements TableModel {
 
     private int customerid, projectid, taskid;
     private final String DATASTORENAME = "EWUSTimeTracker";
@@ -241,5 +243,43 @@ public class Storage {
             ex.printStackTrace();
             error = ex.getMessage();
         }
+    }
+
+    public int getRowCount() {
+        return this.countTimeSlots();
+    }
+
+    public int getColumnCount() {
+        return 4;
+    }
+
+    public String getColumnName(int i) {
+        switch(i) {
+            case 0: return LocalizationSupport.getMessage("ID");
+            case 1: return LocalizationSupport.getMessage("P#");
+            case 2: return LocalizationSupport.getMessage("Time");
+            case 3: return LocalizationSupport.getMessage("Duration");
+        }
+        return "";
+    }
+
+    public boolean isCellEditable(int row, int column) {
+        return false;
+    }
+
+    public Object getValueAt(int row, int column) {
+        return String.valueOf(row) + "x" + String.valueOf(column);
+    }
+
+    public void setValueAt(int row, int column, Object o) {
+        
+    }
+
+    public void addDataChangeListener(DataChangedListener d) {
+        
+    }
+
+    public void removeDataChangeListener(DataChangedListener d) {
+        
     }
 }

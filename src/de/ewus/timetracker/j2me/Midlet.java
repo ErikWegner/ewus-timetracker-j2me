@@ -5,8 +5,9 @@ import javax.microedition.midlet.*;
 import com.sun.lwuit.*;
 import com.sun.lwuit.animations.CommonTransitions;
 import com.sun.lwuit.events.*;
-import com.sun.lwuit.layouts.GridLayout;
 import com.sun.lwuit.plaf.Style;
+import com.sun.lwuit.table.Table;
+import com.sun.lwuit.table.TableLayout;
 
 /**
  * @author Erik Wegner
@@ -33,6 +34,7 @@ public class Midlet extends MIDlet implements ActionListener {
     Command exitCommand;
     Label main_customer, main_project, main_task, main_status;
     Button main_startstop;
+    Table main_table;
     
     Form settingsform, dataform;
     
@@ -72,14 +74,51 @@ public class Midlet extends MIDlet implements ActionListener {
         main_startstop = new Button(new Command(LocalizationSupport.getMessage("StartStop"), CMD_STARTSTOP));
         setStartStopButtonStyle();      
         
+        main_table = new Table(controller.getTableModel());
+        
         mainform = new Form(LocalizationSupport.getMessage("EWUSTimeTracker"));
         
-        mainform.setLayout(new GridLayout(5, 1));
-        mainform.addComponent(main_customer);
-        mainform.addComponent(main_project);
-        mainform.addComponent(main_task);
-        mainform.addComponent(main_startstop);
-        mainform.addComponent(main_status);
+        int[] relative_sizes = new int[] {10,10,10,20,10,40};
+        int elemcounter = 0;
+        TableLayout layout = new TableLayout(relative_sizes.length,1);
+        mainform.setLayout(layout);
+        TableLayout.Constraint constraint;
+        
+        constraint = layout.createConstraint();
+        constraint.setHeightPercentage(relative_sizes[elemcounter]);
+        constraint.setWidthPercentage(100);
+        mainform.addComponent(constraint, main_customer);
+        elemcounter++;
+        
+        constraint = layout.createConstraint();
+        constraint.setHeightPercentage(relative_sizes[elemcounter]);
+        constraint.setWidthPercentage(100);
+        mainform.addComponent(constraint, main_project);
+        elemcounter++;
+        
+        constraint = layout.createConstraint();
+        constraint.setHeightPercentage(relative_sizes[elemcounter]);
+        constraint.setWidthPercentage(100);
+        mainform.addComponent(constraint, main_task);
+        elemcounter++;
+        
+        constraint = layout.createConstraint();
+        constraint.setHeightPercentage(relative_sizes[elemcounter]);
+        constraint.setWidthPercentage(100);
+        mainform.addComponent(constraint, main_startstop);
+        elemcounter++;
+        
+        constraint = layout.createConstraint();
+        constraint.setHeightPercentage(relative_sizes[elemcounter]);
+        constraint.setWidthPercentage(100);
+        mainform.addComponent(constraint, main_status);
+        elemcounter++;
+        
+        constraint = layout.createConstraint();
+        constraint.setHeightPercentage(relative_sizes[elemcounter]);
+        constraint.setWidthPercentage(100);
+        mainform.addComponent(constraint, main_table);
+        elemcounter++;
         
         exitCommand = new Command(LocalizationSupport.getMessage("Exit"), CMD_EXIT);
         mainform.addCommand(exitCommand);
@@ -115,8 +154,8 @@ public class Midlet extends MIDlet implements ActionListener {
         if (!LocalizationSupport.initLocalizationSupport()) {
             errorDialog("Error loading translations", LocalizationSupport.getErrorMessage());
         }
-        createFormMain();
         controller = new Control(this);
+        createFormMain();
     }
     
     public void pauseApp() {
