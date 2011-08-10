@@ -75,6 +75,7 @@ public class Midlet extends MIDlet implements ActionListener {
         setStartStopButtonStyle();      
         
         main_table = new Table(controller.getTableModel());
+        main_table.setScrollableY(true);
         
         mainform = new Form(LocalizationSupport.getMessage("EWUSTimeTracker"));
         
@@ -149,6 +150,9 @@ public class Midlet extends MIDlet implements ActionListener {
         settingsform.addCommandListener(this);
     }
     
+    /**
+     * @inheritDoc
+     */
     public void startApp() {
         Display.init(this);
         if (!LocalizationSupport.initLocalizationSupport()) {
@@ -158,6 +162,9 @@ public class Midlet extends MIDlet implements ActionListener {
         createFormMain();
     }
     
+    /**
+     * @inheritDoc
+     */
     public void pauseApp() {
     }
     
@@ -170,10 +177,16 @@ public class Midlet extends MIDlet implements ActionListener {
         Dialog.show(title, new TextArea(message), new Command[] {new Command(LocalizationSupport.getMessage("Dismiss"))} );
     }
     
+    /**
+     * @inheritDoc
+     */
     public void destroyApp(boolean unconditional) {
         controller.end();
     }
     
+    /**
+     * @inheritDoc
+     */
     public void actionPerformed(ActionEvent ae) {
         Command c = ae.getCommand();
         if (c.getId() == CMD_EXIT) {

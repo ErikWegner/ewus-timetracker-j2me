@@ -2,6 +2,7 @@ package de.ewus.timetracker.j2me;
 
 import com.sun.lwuit.events.DataChangedListener;
 import com.sun.lwuit.table.TableModel;
+import java.util.Vector;
 import javax.microedition.rms.*;
 
 /**
@@ -16,6 +17,7 @@ public class Storage implements TableModel {
     private RecordStore datastore, settingsstore;
     private final String SETTING_RUNNING = "Running";
     public final static String STARTTIME = "Starttime";
+    private java.util.Vector dcl;
     
     /**
      * Returns the id of a record or -1
@@ -95,7 +97,12 @@ public class Storage implements TableModel {
         }
     }
 
+    /**
+     * Constructor for the storage class
+     * @throws RecordStoreException 
+     */
     public Storage() throws RecordStoreException {
+        dcl = new Vector();
         readSettings();
     }
 
@@ -237,6 +244,7 @@ public class Storage implements TableModel {
      */
     public void clearTimeSlots() {
         error = "";
+        fireDataChangeEvent(DataChangedListener.REMOVED, -1);
         try {
             RecordStore.deleteRecordStore(DATASTORENAME);
         } catch (RecordStoreException ex) {
@@ -276,10 +284,19 @@ public class Storage implements TableModel {
     }
 
     public void addDataChangeListener(DataChangedListener d) {
-        
+        dcl.addElement(d);
+        System.out.println("ChangedListener added");
     }
 
     public void removeDataChangeListener(DataChangedListener d) {
-        
+        dcl.removeElement(d);
+    }
+    
+    private void fireDataChangeEvent(int type, int index) {
+        for (int i = 0; i < dcl.size(); i++) {
+            DataChangedListener dataChangedListener = (DataChangedListener)dcl.elementAt(i);
+            dataChangedListener.dataChanged(type, index);
+        }
+        System.out.println("Informing listeners");
     }
 }

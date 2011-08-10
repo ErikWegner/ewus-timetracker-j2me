@@ -43,18 +43,33 @@ public class Control implements Runnable {
         }
     }
     
+    /**
+     * Sets the status text in the midlet
+     * @param text The status text
+     */
     private void setStatus(String text) {
         if (midlet != null && midlet.main_status != null) 
             midlet.main_status.setText(text);
     }
     
+    /**
+     * Refresh the table in the midlet
+     */
+    private void updateTable() {
+        if (midlet != null && midlet.main_table != null)
+            midlet.main_table.setModel(getTableModel());
+    }
+    
+    /**
+     * Starts or stops the timer, stores the result in the database and
+     * updates the display.
+     */
     public void startstop() {
         running = !running;
         startstop2();
     }
     
     private void startstop2() {
-        
         setStatus(String.valueOf(running));
         try {
             storage.setRunning(running);
@@ -137,7 +152,7 @@ public class Control implements Runnable {
         setStatus("Adding to database…");
         storage.adddTimeSlot(startTime, System.currentTimeMillis(), 0);
         setStatus("Done.");
-
+        updateTable();
     }
     
     public void end() {
