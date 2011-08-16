@@ -2,7 +2,9 @@ package de.ewus.timetracker.j2me;
 
 import com.sun.lwuit.events.DataChangedListener;
 import com.sun.lwuit.table.TableModel;
+import java.util.Enumeration;
 import java.util.Vector;
+import javax.microedition.io.file.FileSystemRegistry;
 import javax.microedition.rms.*;
 
 /**
@@ -10,15 +12,16 @@ import javax.microedition.rms.*;
  * @author Erik Wegner
  */
 public class Storage implements TableModel {
-
+    
     private int customerid, projectid, taskid;
     private final String DATASTORENAME = "EWUSTimeTracker";
     private final String SETTINGSSTORENAME = "EWUSTimeTrackerSettings";
     private RecordStore datastore, settingsstore;
     private final String SETTING_RUNNING = "Running";
     public final static String STARTTIME = "Starttime";
+    public final static String FILEROOT = "Fileroot";
     private java.util.Vector dcl;
-    
+
     /**
      * Returns the id of a record or -1
      * @param settingname The setting's name
@@ -32,8 +35,9 @@ public class Storage implements TableModel {
             while (e.hasNextElement()) {
                 r_temp = e.nextRecordId();
                 String s = new String(settingsstore.getRecord(r_temp));
-                if (s.startsWith(settingname + "="))
+                if (s.startsWith(settingname + "=")) {
                     r = r_temp;
+                }
             }
             e.destroy();
         } catch (RecordStoreNotOpenException ex) {
@@ -76,7 +80,7 @@ public class Storage implements TableModel {
         if (record_id > -1) {
             try {
                 r = new String(this.settingsstore.getRecord(record_id));
-                r = r.substring(r.indexOf("=")+1);
+                r = r.substring(r.indexOf("=") + 1);
             } catch (RecordStoreException ex) {
                 ex.printStackTrace();
             }
@@ -106,7 +110,6 @@ public class Storage implements TableModel {
         readSettings();
     }
 
-
     /**
      * Stores the state of the timer.
      * @param isRunning True, if the timmer is running
@@ -125,18 +128,20 @@ public class Storage implements TableModel {
      */
     public boolean getRunning() {
         String v = get(SETTING_RUNNING, "0");
-        if (v.equals("1")) return true;
+        if (v.equals("1")) {
+            return true;
+        }
         return false;
     }
-
+    
     public String getCustomer(int id) {
         return "TODO";
     }
-
+    
     public String getProject(int id) {
         return "TODO";
     }
-
+    
     public String getTask(int id) {
         return "TODO";
     }
@@ -182,7 +187,7 @@ public class Storage implements TableModel {
     public void setTaskid(int taskid) {
         this.taskid = taskid;
     }
-
+    
     public void shutdown() {
         if (this.settingsstore != null) {
             try {
@@ -214,8 +219,6 @@ public class Storage implements TableModel {
         }
         return r;
     }
-    
-    
     /**
      * Contains the latest error message
      */
@@ -252,51 +255,68 @@ public class Storage implements TableModel {
             error = ex.getMessage();
         }
     }
-
+    
     public int getRowCount() {
         return this.countTimeSlots();
     }
-
+    
     public int getColumnCount() {
         return 4;
     }
-
+    
     public String getColumnName(int i) {
-        switch(i) {
-            case 0: return LocalizationSupport.getMessage("ID");
-            case 1: return LocalizationSupport.getMessage("P#");
-            case 2: return LocalizationSupport.getMessage("Time");
-            case 3: return LocalizationSupport.getMessage("Duration");
+        switch (i) {
+            case 0:
+                return LocalizationSupport.getMessage("ID");
+            case 1:
+                return LocalizationSupport.getMessage("P#");
+            case 2:
+                return LocalizationSupport.getMessage("Time");
+            case 3:
+                return LocalizationSupport.getMessage("Duration");
         }
         return "";
     }
-
+    
     public boolean isCellEditable(int row, int column) {
         return false;
     }
-
+    
     public Object getValueAt(int row, int column) {
         return String.valueOf(row) + "x" + String.valueOf(column);
     }
-
+    
     public void setValueAt(int row, int column, Object o) {
         
     }
-
+    
     public void addDataChangeListener(DataChangedListener d) {
         dcl.addElement(d);
-        System.out.println("ChangedListener added");
     }
-
+    
     public void removeDataChangeListener(DataChangedListener d) {
         dcl.removeElement(d);
     }
     
     private void fireDataChangeEvent(int type, int index) {
         for (int i = 0; i < dcl.size(); i++) {
-            DataChangedListener dataChangedListener = (DataChangedListener)dcl.elementAt(i);
+            DataChangedListener dataChangedListener = (DataChangedListener) dcl.elementAt(i);
             dataChangedListener.dataChanged(type, index);
         }
         System.out.println("Informing listeners");
+    }
+    
+    /**
+     * Query for available filesystems
+     * @return A list of file roots
+     */
+    public Vector getAvailableFileroots() {
+        Vector r = new Vector();
+        Enumeration drives = FileSystemRegistry.listRoots();
+        while (drives.hasMoreElements()) {
+            String root = (String) drives.nextElement();
+            r.addElement(root);
+        }
+        return r;
     }
 }

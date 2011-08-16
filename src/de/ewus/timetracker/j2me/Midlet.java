@@ -8,6 +8,7 @@ import com.sun.lwuit.events.*;
 import com.sun.lwuit.plaf.Style;
 import com.sun.lwuit.table.Table;
 import com.sun.lwuit.table.TableLayout;
+import java.util.Vector;
 
 /**
  * @author Erik Wegner
@@ -28,6 +29,8 @@ public class Midlet extends MIDlet implements ActionListener {
 
     /** Command to open data screen */
     private static final int CMD_DATA = 5;
+
+    private boolean savesettings = false;
     
     Form mainform;
     
@@ -35,6 +38,7 @@ public class Midlet extends MIDlet implements ActionListener {
     Label main_customer, main_project, main_task, main_status;
     Button main_startstop;
     Table main_table;
+    ComboBox set_fileroot;
     
     Form settingsform, dataform;
     
@@ -131,6 +135,7 @@ public class Midlet extends MIDlet implements ActionListener {
         mainform.setTransitionOutAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
         mainform.setTransitionInAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, false, 500));
         mainform.addCommandListener(this);
+        
         mainform.show();
     }
     
@@ -148,6 +153,14 @@ public class Midlet extends MIDlet implements ActionListener {
         settingsform.addCommand(exitCommand);
         
         settingsform.addCommandListener(this);
+        
+        Vector fileroots = new Vector();
+        fileroots = controller.getAvailableFileroots();
+        set_fileroot = new ComboBox(fileroots);
+        set_fileroot.setSelectedIndex(fileroots.indexOf(controller.getFileroot()));
+        settingsform.addComponent(set_fileroot);
+        
+        savesettings = true;
     }
     
     /**
@@ -182,6 +195,7 @@ public class Midlet extends MIDlet implements ActionListener {
      */
     public void destroyApp(boolean unconditional) {
         controller.end();
+        notifyDestroyed();
     }
     
     /**
@@ -190,12 +204,13 @@ public class Midlet extends MIDlet implements ActionListener {
     public void actionPerformed(ActionEvent ae) {
         Command c = ae.getCommand();
         if (c.getId() == CMD_EXIT) {
-            notifyDestroyed();
+            destroyApp(false);
         }
         if (c.getId() == CMD_STARTSTOP) {
             controller.startstop();
         }
         if (c.getId() == CMD_BACK) {
+            if (savesettings) savesettings();
             mainform.showBack();
         }
         if (c.getId() == CMD_SETTINGS) {
@@ -210,5 +225,13 @@ public class Midlet extends MIDlet implements ActionListener {
             }
             dataform.show();
         }
+    }
+
+    public void close() {
+        destroyApp(false);
+    }
+
+    private void savesettings() {
+        controller.savesettings(set_fileroot.getSelectedItem().toString());
     }
 }

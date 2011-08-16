@@ -1,6 +1,7 @@
 package de.ewus.timetracker.j2me;
 
 import com.sun.lwuit.table.TableModel;
+import java.util.Vector;
 import javax.microedition.rms.RecordStoreException;
 
 /**
@@ -155,6 +156,9 @@ public class Control implements Runnable {
         updateTable();
     }
     
+    /**
+     * Signals the controller to shutdown and free all resources 
+     */
     public void end() {
         storage.shutdown();
     }
@@ -173,5 +177,31 @@ public class Control implements Runnable {
 
     public TableModel getTableModel() {
         return this.storage;
+    }
+    
+    public Vector getAvailableFileroots() {
+        return this.storage.getAvailableFileroots();
+    }
+
+    public String getFileroot() {
+        String fr = storage.get(Storage.FILEROOT, "");
+        if (fr.length() == 0) {
+            Vector fileroots = getAvailableFileroots();
+            if (fileroots.isEmpty()) {
+                errorDialog(LocalizationSupport.getMessage("NoDriveTitle"), LocalizationSupport.getMessage("NoDriveMsg"));
+                midlet.close();
+            }
+            fr = (String)fileroots.elementAt(0);
+            storage.set(Storage.FILEROOT, fr);
+        }
+        return fr;
+    }
+
+    /**
+     * Save settings
+     * @param fileroot Name of the filesystem root
+     */
+    public void savesettings(String fileroot) {
+        storage.set(Storage.FILEROOT, fileroot);
     }
 }
