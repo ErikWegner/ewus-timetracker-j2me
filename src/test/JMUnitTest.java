@@ -16,7 +16,7 @@ public class JMUnitTest extends TestCase {
     
     public JMUnitTest() {
         //The first parameter of inherited constructor is the number of test cases
-        super(7, "JMUnitTest EWUSTT");
+        super(8, "JMUnitTest EWUSTT");
     }    
     
     public void test(int testNumber) throws Throwable {
@@ -28,6 +28,7 @@ public class JMUnitTest extends TestCase {
             case 4 : test_storage_nosetting(); break;
             case 5 : test_clear_timeslots(); break;
             case 6 : test_storage_roots(); break;
+            case 7 : test_storage_timeslot_saving(); break;
         }
     }    
     
@@ -76,9 +77,26 @@ public class JMUnitTest extends TestCase {
         c.end();
     }
     
-    private void test_storage_roots() {
+    private void test_storage_roots()  throws Exception {
         Control c = new Control(null);
         assertFalse("Device has no drives", c.getAvailableFileroots().isEmpty());
         c.end();
     }
+
+    private void test_storage_timeslot_saving()  throws Exception {
+        int v = -1;
+        Control c = new Control(null);
+        v = c.countTimeSlots();
+        for (int i = 0; i < 10; i++) {
+            assertTrue("Adding time slot", c.addTimeSlot(0, 10, 0));
+            v = v + 1;
+            assertEquals("(a) Same value", v, c.countTimeSlots());
+        }
+        c.end();
+        c = new Control(null);
+        assertTrue("Has time slots", c.countTimeSlots() > 0);
+        c.end();
+        assertEquals("(b) Same value", v, c.countTimeSlots());
+    }
+
 }

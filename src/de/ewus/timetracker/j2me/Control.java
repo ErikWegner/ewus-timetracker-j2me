@@ -189,7 +189,7 @@ public class Control implements Runnable {
             Vector fileroots = getAvailableFileroots();
             if (fileroots.isEmpty()) {
                 errorDialog(LocalizationSupport.getMessage("NoDriveTitle"), LocalizationSupport.getMessage("NoDriveMsg"));
-                midlet.close();
+                close();
             }
             fr = (String)fileroots.elementAt(0);
             storage.set(Storage.FILEROOT, fr);
@@ -203,5 +203,9 @@ public class Control implements Runnable {
      */
     public void savesettings(String fileroot) {
         storage.set(Storage.FILEROOT, fileroot);
+    }
+
+    private void close() {
+        if (midlet != null) midlet.close();
     }
 }

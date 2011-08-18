@@ -2,9 +2,11 @@ package de.ewus.timetracker.j2me;
 
 import com.sun.lwuit.events.DataChangedListener;
 import com.sun.lwuit.table.TableModel;
+import java.io.*;
 import java.util.Enumeration;
 import java.util.Vector;
-import javax.microedition.io.file.FileSystemRegistry;
+import javax.microedition.io.Connector;
+import javax.microedition.io.file.*;
 import javax.microedition.rms.*;
 
 /**
@@ -16,12 +18,59 @@ public class Storage implements TableModel {
     private int customerid, projectid, taskid;
     private final String DATASTORENAME = "EWUSTimeTracker";
     private final String SETTINGSSTORENAME = "EWUSTimeTrackerSettings";
-    private RecordStore datastore, settingsstore;
+    private RecordStore settingsstore;
     private final String SETTING_RUNNING = "Running";
+    private final String SETTING_IMMEDIATESAVE = "ImmediateSave";
     public final static String STARTTIME = "Starttime";
     public final static String FILEROOT = "Fileroot";
+    
+    private final static String PREFIX_CUSTOMER = "C";
+    private final static String PREFIX_PROJECT = "P";
+    private final static String PREFIX_TASK = "T";
+    private final static String PREFIX_TIMESLOT = "S";
+
+    private final static String SEPARATOR = "#";
+    
+    /** List of data change listener */
     private java.util.Vector dcl;
 
+    /** Elements of the data store */
+    private Vector data;
+    
+    /** Indicates that "data" has changes */
+    private boolean data_dirty = false;
+    
+    private boolean immediatesave = false;
+    
+    private boolean readData() {
+        boolean r = false;
+        FileConnection fc = null;
+        DataInputStream is = null;
+        
+        try {
+            fc = (FileConnection)Connector.open(filename(), Connector.READ);
+            if (fc.exists()) {
+                is = fc.openDataInputStream();
+                String line;
+                while (true) {
+                    line = is.readUTF();
+                    data.addElement(line);
+                }
+            }
+            r = true;
+        }
+        catch (EOFException eof) { /* Do nothing */ }
+        catch (IOException ex) {
+            ex.printStackTrace();
+            error = ex.getMessage();
+        }
+        finally {
+            if (is != null) try { is.close(); } catch (IOException ex) { }
+            if (fc != null) try { fc.close(); } catch (IOException ex) { }
+        }
+        return r;
+    }
+    
     /**
      * Returns the id of a record or -1
      * @param settingname The setting's name
@@ -107,7 +156,9 @@ public class Storage implements TableModel {
      */
     public Storage() throws RecordStoreException {
         dcl = new Vector();
+        data = new Vector();
         readSettings();
+        readData();
     }
 
     /**
@@ -189,6 +240,7 @@ public class Storage implements TableModel {
     }
     
     public void shutdown() {
+        saveData();
         if (this.settingsstore != null) {
             try {
                 settingsstore.closeRecordStore();
@@ -199,25 +251,29 @@ public class Storage implements TableModel {
     }
 
     /**
+     * Saves the data if there are changes and the setting of isImmediatesave is true
+     * A call to this method is always allowed
+     * @return True if saved, false otherwise
+     */
+    public boolean immediateSaveData() {
+        if (data_dirty && this.isImmediatesave()) {
+            return saveData();
+        }
+        return false;
+    }
+    
+    /**
      * Add a time slot to the database
      * @param begin Starting time
      * @param end End time
      * @param task time for this task
      */
     public boolean adddTimeSlot(long begin, long end, int task) {
-        boolean r = false;
-        error = "";
-        try {
-            datastore = RecordStore.openRecordStore(DATASTORENAME, true);
-            byte[] data = (String.valueOf(begin) + "#" + String.valueOf(end) + "#" + String.valueOf(task)).getBytes();
-            datastore.addRecord(data, 0, data.length);
-            datastore.closeRecordStore();
-            r = true;
-        } catch (RecordStoreException ex) {
-            ex.printStackTrace();
-            error = ex.getMessage();
-        }
-        return r;
+        String timeslot = PREFIX_TIMESLOT + String.valueOf(begin) + SEPARATOR + String.valueOf(end) + SEPARATOR + String.valueOf(task);
+        data.addElement(timeslot);
+        data_dirty = true;
+        immediateSaveData();
+        return true;
     }
     /**
      * Contains the latest error message
@@ -226,18 +282,17 @@ public class Storage implements TableModel {
 
     /**
      * Reads the number of records
-     * @return number of records or -1 if an error occurs
+     * @return number of records
      */
     public int countTimeSlots() {
-        int r = -1;
-        error = "";
-        try {
-            datastore = RecordStore.openRecordStore(DATASTORENAME, true);
-            r = datastore.getNumRecords();
-            datastore.closeRecordStore();
-        } catch (RecordStoreException ex) {
-            ex.printStackTrace();
-            error = ex.getMessage();
+        int r = 0;
+        String elem;
+        Enumeration e = data.elements();
+        while (e.hasMoreElements()) {
+            elem = (String)e.nextElement();
+            if (elem.startsWith(PREFIX_TIMESLOT)) {
+                r = r + 1;
+            }
         }
         return r;
     }
@@ -248,12 +303,8 @@ public class Storage implements TableModel {
     public void clearTimeSlots() {
         error = "";
         fireDataChangeEvent(DataChangedListener.REMOVED, -1);
-        try {
-            RecordStore.deleteRecordStore(DATASTORENAME);
-        } catch (RecordStoreException ex) {
-            ex.printStackTrace();
-            error = ex.getMessage();
-        }
+        data.removeAllElements();
+        immediateSaveData();
     }
     
     public int getRowCount() {
@@ -303,7 +354,6 @@ public class Storage implements TableModel {
             DataChangedListener dataChangedListener = (DataChangedListener) dcl.elementAt(i);
             dataChangedListener.dataChanged(type, index);
         }
-        System.out.println("Informing listeners");
     }
     
     /**
@@ -316,6 +366,63 @@ public class Storage implements TableModel {
         while (drives.hasMoreElements()) {
             String root = (String) drives.nextElement();
             r.addElement(root);
+        }
+        return r;
+    }
+
+    /**
+     * Returns the value for this setting
+     * @return the immediatesave
+     */
+    public boolean isImmediatesave() {
+        return immediatesave;
+    }
+
+    /**
+     * Updates the value for this setting
+     * @param immediatesave the immediatesave to set
+     */
+    public void setImmediatesave(boolean immediatesave) {
+        if (this.immediatesave != immediatesave) {
+            String v = "0";
+            if (immediatesave) v = "1";
+            set(SETTING_IMMEDIATESAVE, v);
+        }
+        this.immediatesave = immediatesave;
+    }
+    
+    public String filename() {
+        return "file:///" + get(FILEROOT, (String)getAvailableFileroots().elementAt(0)) + DATASTORENAME + ".dat";
+    }
+    
+    /**
+     * Stores all data to file system
+     * @return False, if an error occured
+     */
+    public boolean saveData() {
+        boolean r = false;
+        FileConnection fc = null;
+        DataOutputStream os = null;
+        
+        try {
+            fc = (FileConnection)Connector.open(filename());
+            if (!fc.exists()) fc.create();
+            os = fc.openDataOutputStream();
+            String line;
+            Enumeration lines = data.elements();
+            while (lines.hasMoreElements()) {
+                line = (String)lines.nextElement();
+                os.writeUTF(line);
+            }
+            r = true;
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+            error = ex.getMessage();
+        }
+        finally {
+            if (os != null) try { os.close(); } catch (IOException ex) { }
+            if (fc != null) try { fc.close(); } catch (IOException ex) { }
         }
         return r;
     }
