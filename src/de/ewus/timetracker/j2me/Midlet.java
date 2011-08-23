@@ -1,13 +1,16 @@
 package de.ewus.timetracker.j2me;
 
+import java.io.IOException;
 import javax.microedition.midlet.*;
 
 import com.sun.lwuit.*;
 import com.sun.lwuit.animations.CommonTransitions;
 import com.sun.lwuit.events.*;
+import com.sun.lwuit.layouts.BorderLayout;
 import com.sun.lwuit.plaf.Style;
 import com.sun.lwuit.table.Table;
 import com.sun.lwuit.table.TableLayout;
+import com.sun.lwuit.util.Resources;
 import java.util.Vector;
 
 /**
@@ -29,6 +32,9 @@ public class Midlet extends MIDlet implements ActionListener {
 
     /** Command to open data screen */
     private static final int CMD_DATA = 5;
+    
+    /** Command to open data screen */
+    private static final int CMD_CUSTOMERS = 6;
 
     private boolean savesettings = false;
     
@@ -146,20 +152,35 @@ public class Midlet extends MIDlet implements ActionListener {
         dataform.addCommandListener(this);
     }
     
+    private Image getImage(String name) {
+        Image i = null;
+        try {
+            i = Image.createImage("/" + name);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        return i;
+    }
+    
     private void createFormSettings() {
         settingsform = new Form(LocalizationSupport.getMessage("Settings"));
-        
+        settingsform.setLayout(new BorderLayout());
         settingsform.addCommand(new Command(LocalizationSupport.getMessage("Back"), CMD_BACK));
         settingsform.addCommand(exitCommand);
-        
         settingsform.addCommandListener(this);
+        
+        TabbedPane tp = new TabbedPane(TabbedPane.BOTTOM);
+        
+        Container c1 = new Container();
+        tp.addTab(LocalizationSupport.getMessage("SettingsGeneral"), getImage("applications-system.png"), c1);
         
         Vector fileroots = new Vector();
         fileroots = controller.getAvailableFileroots();
         set_fileroot = new ComboBox(fileroots);
         set_fileroot.setSelectedIndex(fileroots.indexOf(controller.getFileroot()));
-        settingsform.addComponent(set_fileroot);
+        c1.addComponent(set_fileroot);
         
+        settingsform.addComponent(BorderLayout.CENTER, tp);
         savesettings = true;
     }
     
