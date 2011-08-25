@@ -13,8 +13,7 @@ import javax.microedition.rms.*;
  *
  * @author Erik Wegner
  */
-public class Storage implements TableModel {
-    
+public class Storage {
     private int customerid, projectid, taskid;
     private final String DATASTORENAME = "EWUSTimeTracker";
     private final String SETTINGSSTORENAME = "EWUSTimeTrackerSettings";
@@ -23,32 +22,28 @@ public class Storage implements TableModel {
     private final String SETTING_IMMEDIATESAVE = "ImmediateSave";
     public final static String STARTTIME = "Starttime";
     public final static String FILEROOT = "Fileroot";
-    
     private final static String PREFIX_CUSTOMER = "C";
     private final static String PREFIX_PROJECT = "P";
     private final static String PREFIX_TASK = "T";
     private final static String PREFIX_TIMESLOT = "S";
-
     private final static String SEPARATOR = "#";
-    
     /** List of data change listener */
-    private java.util.Vector dcl;
-
+    private java.util.Vector dcl_timeslotmodel, dcl_taskmodel;
     /** Elements of the data store */
     private Vector data;
-    
     /** Indicates that "data" has changes */
     private boolean data_dirty = false;
-    
     private boolean immediatesave = false;
+
+    private TableModel tasktablemodel, timeslottablemodel;
     
     private boolean readData() {
         boolean r = false;
         FileConnection fc = null;
         DataInputStream is = null;
-        
+
         try {
-            fc = (FileConnection)Connector.open(filename(), Connector.READ);
+            fc = (FileConnection) Connector.open(filename(), Connector.READ);
             if (fc.exists()) {
                 is = fc.openDataInputStream();
                 String line;
@@ -58,19 +53,26 @@ public class Storage implements TableModel {
                 }
             }
             r = true;
-        }
-        catch (EOFException eof) { /* Do nothing */ }
-        catch (IOException ex) {
+        } catch (EOFException eof) { /* Do nothing */ } catch (IOException ex) {
             ex.printStackTrace();
             error = ex.getMessage();
-        }
-        finally {
-            if (is != null) try { is.close(); } catch (IOException ex) { }
-            if (fc != null) try { fc.close(); } catch (IOException ex) { }
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ex) {
+                }
+            }
+            if (fc != null) {
+                try {
+                    fc.close();
+                } catch (IOException ex) {
+                }
+            }
         }
         return r;
     }
-    
+
     /**
      * Returns the id of a record or -1
      * @param settingname The setting's name
@@ -136,7 +138,7 @@ public class Storage implements TableModel {
         }
         return r;
     }
-    
+
     private void readSettings() throws RecordStoreException {
         if (settingsstore == null) {
             try {
@@ -155,7 +157,8 @@ public class Storage implements TableModel {
      * @throws RecordStoreException 
      */
     public Storage() throws RecordStoreException {
-        dcl = new Vector();
+        dcl_timeslotmodel = new Vector();
+        dcl_taskmodel = new Vector();
         data = new Vector();
         readSettings();
         readData();
@@ -184,15 +187,15 @@ public class Storage implements TableModel {
         }
         return false;
     }
-    
+
     public String getCustomer(int id) {
         return "TODO";
     }
-    
+
     public String getProject(int id) {
         return "TODO";
     }
-    
+
     public String getTask(int id) {
         return "TODO";
     }
@@ -238,7 +241,7 @@ public class Storage implements TableModel {
     public void setTaskid(int taskid) {
         this.taskid = taskid;
     }
-    
+
     public void shutdown() {
         saveData();
         if (this.settingsstore != null) {
@@ -261,7 +264,7 @@ public class Storage implements TableModel {
         }
         return false;
     }
-    
+
     /**
      * Add a time slot to the database
      * @param begin Starting time
@@ -289,7 +292,7 @@ public class Storage implements TableModel {
         String elem;
         Enumeration e = data.elements();
         while (e.hasMoreElements()) {
-            elem = (String)e.nextElement();
+            elem = (String) e.nextElement();
             if (elem.startsWith(PREFIX_TIMESLOT)) {
                 r = r + 1;
             }
@@ -302,60 +305,11 @@ public class Storage implements TableModel {
      */
     public void clearTimeSlots() {
         error = "";
-        fireDataChangeEvent(DataChangedListener.REMOVED, -1);
+        fireDataChangeEvent(dcl_timeslotmodel, DataChangedListener.REMOVED, -1);
         data.removeAllElements();
         immediateSaveData();
     }
-    
-    public int getRowCount() {
-        return this.countTimeSlots();
-    }
-    
-    public int getColumnCount() {
-        return 4;
-    }
-    
-    public String getColumnName(int i) {
-        switch (i) {
-            case 0:
-                return LocalizationSupport.getMessage("ID");
-            case 1:
-                return LocalizationSupport.getMessage("P#");
-            case 2:
-                return LocalizationSupport.getMessage("Time");
-            case 3:
-                return LocalizationSupport.getMessage("Duration");
-        }
-        return "";
-    }
-    
-    public boolean isCellEditable(int row, int column) {
-        return false;
-    }
-    
-    public Object getValueAt(int row, int column) {
-        return String.valueOf(row) + "x" + String.valueOf(column);
-    }
-    
-    public void setValueAt(int row, int column, Object o) {
-        
-    }
-    
-    public void addDataChangeListener(DataChangedListener d) {
-        dcl.addElement(d);
-    }
-    
-    public void removeDataChangeListener(DataChangedListener d) {
-        dcl.removeElement(d);
-    }
-    
-    private void fireDataChangeEvent(int type, int index) {
-        for (int i = 0; i < dcl.size(); i++) {
-            DataChangedListener dataChangedListener = (DataChangedListener) dcl.elementAt(i);
-            dataChangedListener.dataChanged(type, index);
-        }
-    }
-    
+
     /**
      * Query for available filesystems
      * @return A list of file roots
@@ -385,16 +339,18 @@ public class Storage implements TableModel {
     public void setImmediatesave(boolean immediatesave) {
         if (this.immediatesave != immediatesave) {
             String v = "0";
-            if (immediatesave) v = "1";
+            if (immediatesave) {
+                v = "1";
+            }
             set(SETTING_IMMEDIATESAVE, v);
         }
         this.immediatesave = immediatesave;
     }
-    
+
     public String filename() {
-        return "file:///" + get(FILEROOT, (String)getAvailableFileroots().elementAt(0)) + DATASTORENAME + ".dat";
+        return "file:///" + get(FILEROOT, (String) getAvailableFileroots().elementAt(0)) + DATASTORENAME + ".dat";
     }
-    
+
     /**
      * Stores all data to file system
      * @return False, if an error occured
@@ -403,30 +359,40 @@ public class Storage implements TableModel {
         boolean r = false;
         FileConnection fc = null;
         DataOutputStream os = null;
-        
+
         try {
-            fc = (FileConnection)Connector.open(filename());
-            if (!fc.exists()) fc.create();
+            fc = (FileConnection) Connector.open(filename());
+            if (!fc.exists()) {
+                fc.create();
+            }
             os = fc.openDataOutputStream();
             String line;
             Enumeration lines = data.elements();
             while (lines.hasMoreElements()) {
-                line = (String)lines.nextElement();
+                line = (String) lines.nextElement();
                 os.writeUTF(line);
             }
             r = true;
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
             error = ex.getMessage();
-        }
-        finally {
-            if (os != null) try { os.close(); } catch (IOException ex) { }
-            if (fc != null) try { fc.close(); } catch (IOException ex) { }
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException ex) {
+                }
+            }
+            if (fc != null) {
+                try {
+                    fc.close();
+                } catch (IOException ex) {
+                }
+            }
         }
         return r;
     }
-    
+
     public Vector getProjects() {
         Vector c = new Vector();
         c.addElement("A");
@@ -434,7 +400,7 @@ public class Storage implements TableModel {
         c.addElement("K");
         return c;
     }
-    
+
     public Vector getCustomers() {
         Vector v = new Vector();
         v.addElement("C1");
@@ -442,17 +408,72 @@ public class Storage implements TableModel {
         v.addElement("C3");
         return v;
     }
-    
+
     public TableModel getTasks() {
-        return new TasksTableModel();
+        if (this.tasktablemodel == null)
+            this.tasktablemodel = new TasksTableModel();
+        return this.tasktablemodel;
+    }
+
+    public TableModel getTimeSlotTableModel() {
+        if (this.timeslottablemodel == null)
+            this.timeslottablemodel = new TimeslotsTableModel();
+        return this.timeslottablemodel;
     }
     
-    protected class TimeslotsTableModel {}
-    
-    protected class TasksTableModel implements TableModel {
+    private void fireDataChangeEvent(Vector listeners, int type, int index) {
+        for (int i = 0; i < listeners.size(); i++) {
+            DataChangedListener dataChangedListener = (DataChangedListener) listeners.elementAt(i);
+            dataChangedListener.dataChanged(type, index);
+        }
+    }
 
-        Vector listeners = new Vector();
-        
+
+    protected class TimeslotsTableModel implements TableModel {
+
+        public int getRowCount() {
+            return countTimeSlots();
+        }
+
+        public int getColumnCount() {
+            return 4;
+        }
+
+        public String getColumnName(int i) {
+            switch (i) {
+                case 0:
+                    return LocalizationSupport.getMessage("ID");
+                case 1:
+                    return LocalizationSupport.getMessage("P#");
+                case 2:
+                    return LocalizationSupport.getMessage("Time");
+                case 3:
+                    return LocalizationSupport.getMessage("Duration");
+            }
+            return "";
+        }
+
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+
+        public Object getValueAt(int row, int column) {
+            return String.valueOf(row) + "x" + String.valueOf(column);
+        }
+
+        public void setValueAt(int row, int column, Object o) {
+        }
+
+        public void addDataChangeListener(DataChangedListener d) {
+            dcl_timeslotmodel.addElement(d);
+        }
+
+        public void removeDataChangeListener(DataChangedListener d) {
+            dcl_timeslotmodel.removeElement(d);
+        }
+    }
+
+    protected class TasksTableModel implements TableModel {
         public int getRowCount() {
             return 3;
         }
@@ -463,8 +484,10 @@ public class Storage implements TableModel {
 
         public String getColumnName(int i) {
             switch (i) {
-                case 0: return LocalizationSupport.getMessage("Task");
-                case 1: return LocalizationSupport.getMessage("Budget");
+                case 0:
+                    return LocalizationSupport.getMessage("Task");
+                case 1:
+                    return LocalizationSupport.getMessage("Budget");
             }
             return "";
         }
@@ -481,12 +504,11 @@ public class Storage implements TableModel {
         }
 
         public void addDataChangeListener(DataChangedListener d) {
-            listeners.addElement(d);
+            dcl_taskmodel.addElement(d);
         }
 
         public void removeDataChangeListener(DataChangedListener d) {
-            listeners.removeElement(d);
+            dcl_taskmodel.removeElement(d);
         }
-    
     }
 }

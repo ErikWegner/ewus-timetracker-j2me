@@ -178,7 +178,7 @@ public class Control implements Runnable {
     }
 
     public TableModel getTableModel() {
-        return this.storage;
+        return this.storage.getTimeSlotTableModel();
     }
     
     public Vector getAvailableFileroots() {
