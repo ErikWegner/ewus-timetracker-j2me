@@ -1,5 +1,7 @@
 package de.ewus.timetracker.j2me;
 
+import com.sun.lwuit.list.DefaultListModel;
+import com.sun.lwuit.list.ListModel;
 import com.sun.lwuit.table.TableModel;
 import java.util.Vector;
 import javax.microedition.rms.RecordStoreException;
@@ -207,5 +209,17 @@ public class Control implements Runnable {
 
     private void close() {
         if (midlet != null) midlet.close();
+    }
+    
+    public Vector getProjects() {
+        return this.storage.getProjects();
+    }
+    
+    public Vector getCustomers() {
+        return this.storage.getCustomers();
+    }
+    
+    public TableModel getTasks() {
+        return this.storage.getTasks();
     }
 }

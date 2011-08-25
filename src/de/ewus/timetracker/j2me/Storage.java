@@ -426,4 +426,67 @@ public class Storage implements TableModel {
         }
         return r;
     }
+    
+    public Vector getProjects() {
+        Vector c = new Vector();
+        c.addElement("A");
+        c.addElement("N");
+        c.addElement("K");
+        return c;
+    }
+    
+    public Vector getCustomers() {
+        Vector v = new Vector();
+        v.addElement("C1");
+        v.addElement("C2");
+        v.addElement("C3");
+        return v;
+    }
+    
+    public TableModel getTasks() {
+        return new TasksTableModel();
+    }
+    
+    protected class TimeslotsTableModel {}
+    
+    protected class TasksTableModel implements TableModel {
+
+        Vector listeners = new Vector();
+        
+        public int getRowCount() {
+            return 3;
+        }
+
+        public int getColumnCount() {
+            return 2;
+        }
+
+        public String getColumnName(int i) {
+            switch (i) {
+                case 0: return LocalizationSupport.getMessage("Task");
+                case 1: return LocalizationSupport.getMessage("Budget");
+            }
+            return "";
+        }
+
+        public boolean isCellEditable(int row, int column) {
+            return column == 0;
+        }
+
+        public Object getValueAt(int row, int column) {
+            return String.valueOf(row) + "x" + String.valueOf(column);
+        }
+
+        public void setValueAt(int row, int column, Object o) {
+        }
+
+        public void addDataChangeListener(DataChangedListener d) {
+            listeners.addElement(d);
+        }
+
+        public void removeDataChangeListener(DataChangedListener d) {
+            listeners.removeElement(d);
+        }
+    
+    }
 }
