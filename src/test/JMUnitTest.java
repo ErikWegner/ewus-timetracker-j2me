@@ -16,7 +16,7 @@ public class JMUnitTest extends TestCase {
     
     public JMUnitTest() {
         //The first parameter of inherited constructor is the number of test cases
-        super(8, "JMUnitTest EWUSTT");
+        super(9, "JMUnitTest EWUSTT");
     }    
     
     public void test(int testNumber) throws Throwable {
@@ -29,6 +29,7 @@ public class JMUnitTest extends TestCase {
             case 5 : test_clear_timeslots(); break;
             case 6 : test_storage_roots(); break;
             case 7 : test_storage_timeslot_saving(); break;
+            case 8 : test_customers(); break;
         }
     }    
     
@@ -97,6 +98,27 @@ public class JMUnitTest extends TestCase {
         assertTrue("Has time slots", c.countTimeSlots() > 0);
         c.end();
         assertEquals("(b) Same value", v, c.countTimeSlots());
+    }
+
+    private void test_customers() throws Exception {
+        Storage s = new Storage();
+        int n = s.getCustomers().size();
+        assertTrue("At least one customer", n > 0);
+        int t1, t2, t3;
+        t1 = s.addCustomer("Test1");
+        t2 = s.addCustomer("Text 2");
+        t3 = s.addCustomer("Test3");
+        assertEquals("Adding customer #1", t1, n);
+        assertEquals("Adding customer #2", t2, n + 1);
+        assertEquals("Adding customer #3", t3, n + 2);
+        assertTrue("Removing customer #2", s.removeCustomer(t2, t1));
+        t3 = t3 - 1;
+        assertEquals("Removed customer #2", n + 2, s.getCustomers().size());
+        assertTrue("Removing customer #3", s.removeCustomer(t3, t1));
+        assertEquals("Removed customer #3", n + 1, s.getCustomers().size());
+        assertTrue("Removing customer #1", s.removeCustomer(t1, 0));
+        assertEquals("Removed customer #1", n, s.getCustomers().size());
+        assertFalse("Removing last customer", s.removeCustomer(0, 0));
     }
 
 }

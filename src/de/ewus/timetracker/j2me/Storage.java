@@ -10,7 +10,14 @@ import javax.microedition.io.file.*;
 import javax.microedition.rms.*;
 
 /**
- *
+ * This class stores all data.
+ * 
+ * The data is kept in this structure
+ * Customer: C#Name of customer
+ * Project:  P#CustomerID#Project name
+ * Task:     T#ProjectID#Task name
+ * Timeslot: S#TaskID#Begin#End
+ * 
  * @author Erik Wegner
  */
 public class Storage {
@@ -272,7 +279,7 @@ public class Storage {
      * @param task time for this task
      */
     public boolean adddTimeSlot(long begin, long end, int task) {
-        String timeslot = PREFIX_TIMESLOT + String.valueOf(begin) + SEPARATOR + String.valueOf(end) + SEPARATOR + String.valueOf(task);
+        String timeslot = PREFIX_TIMESLOT + SEPARATOR + String.valueOf(task) + SEPARATOR + String.valueOf(begin) + SEPARATOR + String.valueOf(end);
         data.addElement(timeslot);
         data_dirty = true;
         immediateSaveData();
@@ -284,16 +291,26 @@ public class Storage {
     public String error = "";
 
     /**
-     * Reads the number of records
-     * @return number of records
+     * Reads the number of time slot records
+     * @return number of time slot records
      */
     public int countTimeSlots() {
+        return countData(PREFIX_TIMESLOT);
+    }   
+    
+    /**
+     * Read the number of records of a given type
+     * @param prefix Type of record
+     * @return count of records
+     */
+    protected int countData(String prefix) 
+    {
         int r = 0;
         String elem;
         Enumeration e = data.elements();
         while (e.hasMoreElements()) {
             elem = (String) e.nextElement();
-            if (elem.startsWith(PREFIX_TIMESLOT)) {
+            if (elem.startsWith(prefix)) {
                 r = r + 1;
             }
         }
@@ -401,14 +418,111 @@ public class Storage {
         return c;
     }
 
-    public Vector getCustomers() {
-        Vector v = new Vector();
-        v.addElement("C1");
-        v.addElement("C2");
-        v.addElement("C3");
-        return v;
+    
+    protected boolean isCustomer(String elem) {
+        return elem.startsWith(PREFIX_CUSTOMER);
+    }
+    
+    protected boolean isProject(String elem) {
+        return elem.startsWith(PREFIX_PROJECT);
     }
 
+    protected boolean isTask(String elem) {
+        return elem.startsWith(PREFIX_TASK);
+    }
+    
+    protected boolean isTimeslot(String elem) {
+        return elem.startsWith(PREFIX_TIMESLOT);
+    }
+    
+    /**
+     * Adds a customer
+     * @param name The customer's name
+     * @return The new id
+     */
+    public int addCustomer(String name) {
+        int cid = countData(PREFIX_CUSTOMER);
+        data.addElement(PREFIX_CUSTOMER + SEPARATOR + cid + SEPARATOR + name);
+        return cid;
+    }
+        
+    protected int customerid(String elem) {
+        return Integer.valueOf(elem.substring(3, elem.indexOf(SEPARATOR, 3))).intValue();
+    }
+    
+    /**
+     * Updates a record with a new customer id
+     * @param dataposition Position in data vector to update
+     * @param newid The new id to put in
+     */
+    protected void replaceCustomerid(int dataposition, int newid) {
+        String elem = (String)this.data.elementAt(dataposition);
+        if (isCustomer(elem))
+            return;
+        elem = elem.substring(1, 2) + newid + elem.substring(elem.indexOf(SEPARATOR, 3));
+        this.data.setElementAt(elem, dataposition);
+    }
+    
+    /**
+     * Removes a customer
+     * @param removeid Remove this customer
+     * @param putid File all records under this new id
+     * @return True on success, false if last customer should be removed
+     */
+    public boolean removeCustomer(int removeid, int putid) {
+        int n = this.countData(PREFIX_CUSTOMER);
+        if (n < 2)
+            return false;
+        if (removeid == putid || removeid < 0 || putid < 0 || removeid >= n || putid >= n)
+            return false;
+        
+        String elem; int removeposition = -1, i = 0;
+        
+        if (putid > removeid)
+            putid = putid - 1; // new id will be decreased
+        
+        Enumeration e = data.elements();
+        while (e.hasMoreElements()) {
+            elem = (String) e.nextElement();
+            /* if customerid(elem) > removeid: customerid-1
+             * if customerid(elem) == removeid: customerid = putid
+             * if elemid(elem) == removeid: remove elem
+             */
+            if (customerid(elem) == removeid) {
+                if (isCustomer(elem)) 
+                    removeposition = i;
+                else {
+                    replaceCustomerid(i, putid);
+                }
+            }
+            
+            i = i + 1;
+        }
+        
+        if (i > -1 && i < data.size())
+            data.removeElementAt(i);
+        return true;
+    }
+    
+    public Vector getCustomers() {
+        if (countData(PREFIX_CUSTOMER) == 0)
+            addCustomer(LocalizationSupport.getMessage("GeneralCustomer"));
+        return getData(PREFIX_CUSTOMER);
+    }
+
+    protected Vector getData(String prefix) {
+        Vector c = new Vector();
+        String elem;
+        Enumeration e = data.elements();
+        while (e.hasMoreElements()) {
+            elem = (String) e.nextElement();
+            if (elem.startsWith(prefix)) {
+                c.addElement(elem);
+            }
+        }
+        return c;
+    }
+    
     public TableModel getTasks() {
         if (this.tasktablemodel == null)
             this.tasktablemodel = new TasksTableModel();
