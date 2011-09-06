@@ -12,6 +12,7 @@ import com.sun.lwuit.plaf.UIManager;
 import com.sun.lwuit.table.Table;
 import com.sun.lwuit.table.TableLayout;
 import com.sun.lwuit.util.Resources;
+import de.ewus.timetracker.j2me.gui.ComboAddDel;
 import java.util.Vector;
 
 /**
@@ -29,18 +30,22 @@ public class Midlet extends MIDlet implements ActionListener {
     private static final int CMD_SETTINGS = 4;
     /** Command to open data screen */
     private static final int CMD_DATA = 5;
+    /** Command when project list changes selection */
+    private static final int CMD_SELPROJECT = 6;
     /** Command to add a project */
-    private static final int CMD_ADDPROJECT = 6;
+    private static final int CMD_ADDPROJECT = 7;
     /** Command to remove a project */
-    private static final int CMD_DELPROJECT = 7;
+    private static final int CMD_DELPROJECT = 8;
+    /** Command when customer list changes selection */
+    private static final int CMD_SELCUSTOMER = 10;
     /** Command to add a customer */
-    private static final int CMD_ADDCUSTOMER = 8;
+    private static final int CMD_ADDCUSTOMER = 11;
     /** Command to remove a customer */
-    private static final int CMD_DELCUSTOMER = 9;
+    private static final int CMD_DELCUSTOMER = 12;
     /** Command to add a task */
-    private static final int CMD_ADDTASK = 8;
+    private static final int CMD_ADDTASK = 21;
     /** Command to remove a task */
-    private static final int CMD_DELTASK = 9;
+    private static final int CMD_DELTASK = 22;
 
     private boolean savesettings = false;
     Form mainform;
@@ -52,6 +57,9 @@ public class Midlet extends MIDlet implements ActionListener {
     Form settingsform, dataform;
     Control controller;
 
+    Resources res;
+    private ComboAddDel cadp, cadc, cadt;
+    
     private void setStartStopButtonStyle() {
         Style s = main_startstop.getUnselectedStyle();
         s.setBackgroundType(Style.BACKGROUND_GRADIENT_LINEAR_VERTICAL);
@@ -163,96 +171,65 @@ public class Midlet extends MIDlet implements ActionListener {
         }
         return i;
     }
-
+    
     private void createFormSettings() {
         settingsform = new Form(LocalizationSupport.getMessage("Settings"));
-        settingsform.setLayout(new BorderLayout());
+        //settingsform.setLayout(new BorderLayout());
         settingsform.addCommand(new Command(LocalizationSupport.getMessage("Back"), CMD_BACK));
         settingsform.addCommand(exitCommand);
         settingsform.addCommandListener(this);
+        
+        cadp = new ComboAddDel("Project", CMD_SELPROJECT, CMD_ADDPROJECT, CMD_DELPROJECT, res, this);
+        cadp.setElements(controller.getProjects());
+        settingsform.addComponent(cadp);
 
-        TabbedPane tp = new TabbedPane(TabbedPane.BOTTOM);
+        cadc = new ComboAddDel("Customer", CMD_SELCUSTOMER, CMD_ADDCUSTOMER, CMD_DELCUSTOMER, res, this);
+        cadc.setElements(controller.getCustomers());
+        settingsform.addComponent(cadc);
+        
 
-        Container c1 = new Container(); //General settings
-        Container c2 = new Container(); //Customers, Projects, tasks
-
-        // Building customers, projects, task tab
-        TableLayout.Constraint constraint;
-        TableLayout layout = new TableLayout(11, 3);
-        c2.setLayout(layout);
-
-        c2.setScrollableY(true);
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        constraint.setWidthPercentage(100);
-        Label l = new Label(LocalizationSupport.getMessage("SettingsCPTLabel"));
-        l.setPreferredW(Display.getInstance().getDisplayWidth());
-        c2.addComponent(constraint, l);
-
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        l = new Label(LocalizationSupport.getMessage("Project"));
-        c2.addComponent(constraint, l);
-        ComboBox cbpr = new ComboBox(controller.getProjects());
-        c2.addComponent(cbpr);
-        Button addp = new Button(new Command("", getImage("list-add.png"), CMD_ADDPROJECT));
-        c2.addComponent(addp);
-        Button delp = new Button(new Command("", getImage("list-remove.png"), CMD_DELPROJECT));
-        c2.addComponent(delp);
-
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        l = new Label(LocalizationSupport.getMessage("Customer"));
-        c2.addComponent(constraint, l);
-        ComboBox cbc = new ComboBox(controller.getCustomers());
-        c2.addComponent(cbc);
-        Button addc = new Button(new Command("", getImage("list-add.png"), CMD_ADDCUSTOMER));
-        c2.addComponent(addc);
-        Button delc = new Button(new Command("", getImage("list-remove.png"), CMD_DELCUSTOMER));
-        c2.addComponent(delc);
-
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        l = new Label(LocalizationSupport.getMessage("Budget"));
-        c2.addComponent(constraint, l);
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        TextField tf_budget = new TextField();
-        c2.addComponent(constraint, tf_budget);
-        tp.addTab(LocalizationSupport.getMessage("SettingsCPT"), getImage("accessories-text-editor.png"), c2);
-
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        l = new Label(LocalizationSupport.getMessage("DisplayFormat"));
-        c2.addComponent(constraint, l);
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        ComboBox dspf = new ComboBox(getDisplayFormats());
-        c2.addComponent(constraint, dspf);
-
-        l = new Label(LocalizationSupport.getMessage("Tasks"));
-        c2.addComponent(l);
-        Button addt = new Button(new Command("", getImage("list-add.png"), CMD_ADDTASK));
-        c2.addComponent(addt);
-        Button delt = new Button(new Command("", getImage("list-remove.png"), CMD_DELTASK));
-        c2.addComponent(delt);
-
-        constraint = layout.createConstraint();
-        constraint.setHorizontalSpan(3);
-        Table tasktable = new Table(controller.getTasks());
-        tasktable.setScrollableY(true);
-        c2.addComponent(constraint, tasktable);
-
-
-        // Building general settings tab
-        Vector fileroots = new Vector();
-        fileroots = controller.getAvailableFileroots();
-        set_fileroot = new ComboBox(fileroots);
-        set_fileroot.setSelectedIndex(fileroots.indexOf(controller.getFileroot()));
-        c1.addComponent(set_fileroot);
-        tp.addTab(LocalizationSupport.getMessage("SettingsGeneral"), getImage("applications-system.png"), c1);
-
-        settingsform.addComponent(BorderLayout.CENTER, tp);
+//        constraint = layout.createConstraint();
+//        constraint.setHorizontalSpan(3);
+//        l = new Label(LocalizationSupport.getMessage("Budget"));
+//        c2.addComponent(constraint, l);
+//        constraint = layout.createConstraint();
+//        constraint.setHorizontalSpan(3);
+//        TextField tf_budget = new TextField();
+//        c2.addComponent(constraint, tf_budget);
+//        tp.addTab(LocalizationSupport.getMessage("SettingsCPT"), getImage("accessories-text-editor.png"), c2);
+//
+//        constraint = layout.createConstraint();
+//        constraint.setHorizontalSpan(3);
+//        l = new Label(LocalizationSupport.getMessage("DisplayFormat"));
+//        c2.addComponent(constraint, l);
+//        constraint = layout.createConstraint();
+//        constraint.setHorizontalSpan(3);
+//        ComboBox dspf = new ComboBox(getDisplayFormats());
+//        c2.addComponent(constraint, dspf);
+//
+//        l = new Label(LocalizationSupport.getMessage("Tasks"));
+//        c2.addComponent(l);
+//        Button addt = new Button(new Command("", getImage("list-add.png"), CMD_ADDTASK));
+//        c2.addComponent(addt);
+//        Button delt = new Button(new Command("", getImage("list-remove.png"), CMD_DELTASK));
+//        c2.addComponent(delt);
+//
+//        constraint = layout.createConstraint();
+//        constraint.setHorizontalSpan(3);
+//        Table tasktable = new Table(controller.getTasks());
+//        tasktable.setScrollableY(true);
+//        c2.addComponent(constraint, tasktable);
+//
+//
+//        // Building general settings tab
+//        Vector fileroots = new Vector();
+//        fileroots = controller.getAvailableFileroots();
+//        set_fileroot = new ComboBox(fileroots);
+//        set_fileroot.setSelectedIndex(fileroots.indexOf(controller.getFileroot()));
+//        c1.addComponent(set_fileroot);
+//        tp.addTab(LocalizationSupport.getMessage("SettingsGeneral"), getImage("applications-system.png"), c1);
+//
+//        settingsform.addComponent(BorderLayout.CENTER, tp);
         savesettings = true;
     }
 
@@ -263,8 +240,8 @@ public class Midlet extends MIDlet implements ActionListener {
         Display.init(this);
         try {
             //set the theme
-            Resources theme = Resources.open("/lwuit.res");
-            UIManager.getInstance().setThemeProps(theme.getTheme(theme.getThemeResourceNames()[0]));
+            res = Resources.open("/lwuit.res");
+            UIManager.getInstance().setThemeProps(res.getTheme(res.getThemeResourceNames()[0]));
         } catch (Throwable ex) {
             ex.printStackTrace();
 
@@ -273,8 +250,10 @@ public class Midlet extends MIDlet implements ActionListener {
         if (!LocalizationSupport.initLocalizationSupport()) {
             errorDialog("Error loading translations", LocalizationSupport.getErrorMessage());
         }
-        controller = new Control(this);
-        createFormMain();
+        if (res != null) {
+            controller = new Control(this);
+            createFormMain();
+        }
     }
 
     /**

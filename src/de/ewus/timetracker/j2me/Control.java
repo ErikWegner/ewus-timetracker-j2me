@@ -1,7 +1,5 @@
 package de.ewus.timetracker.j2me;
 
-import com.sun.lwuit.list.DefaultListModel;
-import com.sun.lwuit.list.ListModel;
 import com.sun.lwuit.table.TableModel;
 import java.util.Vector;
 import javax.microedition.rms.RecordStoreException;
